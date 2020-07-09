@@ -1,0 +1,87 @@
+#!/bin/sh
+
+. /lib/functions/network.sh
+
+[ "$ACTION" == "ifup" ] || exit 0
+
+[ -f /etc/config/cwmp ] || exit 0
+
+handle_icwmp_restart() {
+	[ -f /tmp/switching_mode ] && exit 0
+	[ -f /tmp/wificontrol.txt -a -f /tmp/netmode-conf.pid ] && exit 0
+
+	[ "$INTERFACE" == "loopback" ] && exit 0
+
+	local defwan=$(uci -q get cwmp.cpe.default_wan_interface)
+	[ -n "$defwan" -a "$(uci -q get network.$defwan)" == "interface" -a "$defwan" != "$INTERFACE" ] && exit 0
+
+	local islan="$(uci -q get network.$INTERFACE.is_lan)"
+	[ "$islan" == "1" ] && exit 0
+
+	local proto="$(uci -q get network.$INTERFACE.proto)"
+	[ "$proto" == "none" ] && exit 0
+
+	local ifname="$(uci -q get network.$INTERFACE.ifname)"
+	[ "${ifname:0:1}" == "@" ] && exit 0
+
+	mkdir -p /tmp/ipv4
+
+	network_flush_cache
+
+	local previpaddr=""
+	local curipaddr=""
+	local ipaddrfile=/tmp/ipv4/$INTERFACE-ipaddr
+	previpaddr=$(cat $ipaddrfile 2>/dev/null)
+	network_get_ipaddr curipaddr $INTERFACE
+	[ -n "$curipaddr" ] && echo $curipaddr > $ipaddrfile || rm -f $ipaddrfile
+
+	local prevgateway=""
+	local curgateway=""
+	local gatewayfile=/tmp/ipv4/$INTERFACE-gateway
+	prevgateway=$(cat $gatewayfile 2>/dev/null)
+	network_get_gateway curgateway $INTERFACE
+	[ -n "$curgateway" ] && echo $curgateway > $gatewayfile || rm -f $gatewayfile
+
+	local prevsubnets=""
+	local cursubnets=""
+	local subnetsfile=/tmp/ipv4/$INTERFACE-subnets
+	prevsubnets=$(cat $subnetsfile 2>/dev/null)
+	network_get_subnets cursubnets $INTERFACE
+	[ -n "$cursubnets" ] && echo $cursubnets > $subnetsfile || rm -f $subnetsfile
+
+	local prevdnsservers=""
+	local curdnsservers=""
+	local dnsserverfile=/tmp/ipv4/$INTERFACE-dnsservers
+	prevdnsservers=$(cat $dnsserverfile 2>/dev/null)
+	network_get_dnsserver curdnsservers $INTERFACE
+	[ -n "$curdnsservers" ] && echo $curdnsservers > $dnsserverfile || rm -f $dnsserverfile
+
+	local prevdev=""
+	local curdev=""
+	local devfile=/tmp/ipv4/$INTERFACE-dev
+	prevdev=$(cat $devfile 2>/dev/null)
+	network_get_device curdev $INTERFACE
+	[ -n "$curdev" ] && echo $curdev > $devfile || rm -f $devfile
+
+	local prevopt43url=""
+	local curopt43url=""
+	local opt43urlfile=/tmp/ipv4/$INTERFACE-opt43url
+	prevopt43url=$(cat $opt43urlfile 2>/dev/null)
+	curopt43url="$(uci -P /var/state -q get cwmp.acs.dhcp_url)"
+	[ -n "$curopt43url" ] && echo $curopt43url > $opt43urlfile || rm -f $opt43urlfile
+
+	[ \
+		"$prevdev" == "$curdev" -a \
+		"$previpaddr" = "$curipaddr" -a \
+		"$prevgateway" = "$curgateway" -a \
+		"$prevsubnets" = "$cursubnets" -a \
+		"$prevdnsservers" = "$curdnsservers" \
+	] && {
+		[ "$prevopt43url" = "$curopt43url" ] &&	exit 0
+		[ -z "$prevopt43url" ] && exit 0
+	}
+
+	/etc/init.d/icwmpd reload &
+}
+
+handle_icwmp_restart
