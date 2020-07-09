@@ -68,13 +68,6 @@ define Package/icwmp_bulkdata
   DEPENDS:=+PACKAGE_icwmp_bulkdata:libubus +PACKAGE_icwmp_bulkdata:libuci +PACKAGE_icwmp_bulkdata:libubox +PACKAGE_icwmp_bulkdata:libjson-c +PACKAGE_icwmp_bulkdata:libcurl +PACKAGE_icwmp_bulkdata:curl +PACKAGE_icwmp_bulkdata:libblobmsg-json +PACKAGE_icwmp_bulkdata:libbbfdm
 endef
 
-define Package/icwmp-tr098
-  SECTION:=utils
-  CATEGORY:=Utilities
-  TITLE:=CWMP client for TR-098 Data Model
-  DEPENDS:=+PACKAGE_icwmp-tr098:libuci +PACKAGE_icwmp-tr098:libmicroxml +PACKAGE_icwmp-tr098:libubox +PACKAGE_icwmp-tr098:jshn +PACKAGE_icwmp-tr098:libubus +PACKAGE_icwmp-tr098:libblobmsg-json +PACKAGE_icwmp-tr098:libpthread +PACKAGE_icwmp-tr098:ubusd +PACKAGE_icwmp-tr098:shflags +PACKAGE_icwmp-tr098:getopt +PACKAGE_icwmp-tr098:zlib +PACKAGE_icwmp-tr098:libjson-c +PACKAGE_icwmp-tr098:libopenssl +PACKAGE_icwmp-tr098:curl +PACKAGE_icwmp-tr098:libcurl +PACKAGE_icwmp-tr098:libtr098
-endef
-
 define Package/icwmp/Default
   SECTION:=utils
   CATEGORY:=Utilities
@@ -113,11 +106,6 @@ endif
 
 TARGET_CFLAGS += \
 	-D_GNU_SOURCE -D_AADJ
-
-ifeq ($(CONFIG_PACKAGE_icwmp-tr098),y)
-CONFIGURE_ARGS += \
-	--enable-icwmp_tr098
-endif
 
 ifeq ($(CONFIG_PACKAGE_icwmp_xmpp),y)
 CONFIGURE_ARGS += \
@@ -213,11 +201,6 @@ endif
 	$(CP) ./files/* $(1)/
 endef
 
-define Package/icwmp-tr098/install
-	$(INSTALL_DIR) $(1)/usr/sbin
-	$(CP) $(PKG_BUILD_DIR)/bin/icwmp_tr098d $(1)/usr/sbin
-endef
-
 define Package/icwmp_stun/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bin/icwmp_stund $(1)/usr/sbin/icwmp_stund
@@ -289,5 +272,4 @@ $(eval $(call BuildPackage,icwmp_xmpp))
 $(eval $(call BuildPackage,icwmp_udpechoserver))
 $(eval $(call BuildPackage,icwmp_twamp))
 $(eval $(call BuildPackage,icwmp_bulkdata))
-$(eval $(call BuildPackage,icwmp-tr098))
 #$(eval $(call BuildPackage,icwmp-zstream))
