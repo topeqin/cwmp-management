@@ -1,0 +1,26 @@
+From: Elvis Qin <elvis.qin@broadcom.com>
+Date: Tue, 10 July 2020 09:58:50 +0200
+Subject: [PATCH 1/1] jshn: fix undefined reference to is_error which used in json-c-0.14.1
+
+--- a/jshn.c
++++ b/jshn.c
+@@ -28,8 +28,7 @@ static int jshn_message_parse(char **pol
+ 	json_object *obj;
+ 
+ 	jshn_obj = json_tokener_parse(msg);
+-	if (jshn_obj == NULL || is_error(jshn_obj) ||
+-		json_object_get_type(jshn_obj) != json_type_object)
++	if (jshn_obj == NULL ||	json_object_get_type(jshn_obj) != json_type_object)
+ 	{
+ 		jshn_obj = NULL;
+ 		return -1;
+@@ -37,8 +36,7 @@ static int jshn_message_parse(char **pol
+ 	for (i=0; i<size; i++)
+ 	{
+ 		obj = json_object_object_get(jshn_obj, policy[i]);
+-		if (obj == NULL || is_error(obj) ||
+-			json_object_get_type(obj) != json_type_string)
++		if (obj == NULL || json_object_get_type(obj) != json_type_string)
+ 			continue;
+ 		tb[i] = (char *)json_object_get_string(obj);
+ 	}
