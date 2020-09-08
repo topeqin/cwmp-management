@@ -10,5 +10,5 @@ src-git cwmpmanagement https://github.com/topeqin/cwmp-management.git
 To install all its package definitions, run:
 
 ./scripts/feeds update cwmpmanagement
-./scripts/feeds install -a -p cwmpmanagement
+./scripts/feeds install -p icwmp bbf
 
